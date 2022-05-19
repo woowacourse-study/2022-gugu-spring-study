@@ -4,4 +4,6 @@
 
 ### 목차
 
-- [chapter 2 ~ 4: 의존성 주입](./chapter02-04.md)
+- [Chapter 2 - 스프링 시작하기](./chapter02.md)
+- [Chapter 3 - 스프링 DI](./chapter03.md)
+- [Chapter 4 - 의존 자동 주입](./chapter04.md)
