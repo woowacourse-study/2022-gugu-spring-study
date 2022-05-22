@@ -8,18 +8,18 @@
 
 ### `@ComponentScan` 어노테이션으로 **스캔 대상**을 지정
 
-- @Component(basePackages = {”spring”})
+- `@ComponentScan(basePackages = {”spring”})`
 - `basePackages` : 스캔 대상 패키지 목록
 
 ### 스캔 대상에서 제외하거나 포함하기
 
-- excludeFilters 속성을 사용하여 특정 대상을 자동 등록 대상에서 제외
-- @Component(basePackages = {”spring”}, excludeFilters = **@Filter(type = FilterType.REGEX, pattern = “spring\\..*Dao”)**)
+- `excludeFilters` 속성을 사용하여 특정 대상을 자동 등록 대상에서 제외
+- @ComponentScan(basePackages = {”spring”}, excludeFilters = **@Filter(type = FilterType.REGEX, pattern = “spring\\..*Dao”)**)
     - `FilterType.REGEX`  : 정규 표현식 사용
-- @Component(basePackages = {”spring”}, excludeFilters = **@Filter(type = FilterType.ASPECTJ, pattern = “spring.*Dao”)**)
+- @ComponentScan(basePackages = {”spring”}, excludeFilters = **@Filter(type = FilterType.ASPECTJ, pattern = “spring.*Dao”)**)
     - `FilterType.ASPECTJ`  : AspectJ 패턴 사용
-- @Component(basePackages = {”spring”}, excludeFilters = **@Filter(type = FilterType.ANNOTATION, classes = {NoProduct.class, ManualBean.class})**)
-    - `FilterType.ANNOTATION` **:** classes 에 작성한778 어노테이션을 붙인 클래스를 컴포넌트 스캔 대상에서 제외
+- @ComponentScan(basePackages = {”spring”}, excludeFilters = **@Filter(type = FilterType.ANNOTATION, classes = {NoProduct.class, ManualBean.class})**)
+    - `FilterType.ANNOTATION` **:** classes 에 작성한 어노테이션을 붙인 클래스를 컴포넌트 스캔 대상에서 제외
 
 ### 기본 스캔 대상
 
@@ -39,7 +39,7 @@
 
 **빈 이름 충돌**
 
-- @Component(basePackages = {”spring”, “spring2”})
+- @ComponentScan(basePackages = {”spring”, “spring2”})
 - spring, spring2 패키지에 동일한 이름의 클래스가 존재하고 두 클래스 모두 `@Component` 를 붙였을 경우 `익셉션 발생`
 - 둘 중 하나에 명시적으로 빈 이름 지정
 
