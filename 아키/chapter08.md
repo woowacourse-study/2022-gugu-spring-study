@@ -55,7 +55,7 @@ public Member save(Member member) {
 ```
 
 스프링 JdbcTemplate의 장점
-1. 중복되는 코드를 줄어든다.
+1. 중복되는 코드가 줄어든다.
 ```java
 @Override
 public Station save(Station station) {
@@ -73,7 +73,14 @@ public Station save(Station station) {
 }
 ```
 
-2. 트랜잭션 관리가 쉽다. JDBC API로 트랜잭션을 처리하면 다음과 같이 커밋과 롤백처리를 신경써야 하지만, 스프링을 사용하면 `@Transactional `애노테이션만 붙이면 커밋과 롤백처리를 대신 해준다.
+2. 트랜잭션 관리가 쉽다.  
+
+PreparedStatement의 특성상, 자동으로 commit이 이루어 진다. 연결이 AutoCommit이면 해당 연결의 모든 SQL 문이 개별 트랜잭션으로 실행되고 커밋됩니다.
+
+한 메서드 안에서 두개 이상의 sql문을 실행하고자 할 때, 하나라도 제대로 수행되지 않으면 rollback을 하고싶은 경우 Connection의 setAutoCommit(false) 설정을 통해 AutoCommit을 방지할 수 있다.
+
+이처럼 JDBC API로 트랜잭션을 처리하면 다음과 같이 커밋과 롤백처리를 신경써야 하지만, 스프링을 사용하면 `@Transactional `애노테이션만 붙이면 커밋과 롤백처리를 대신 해준다.
+
 ```java
 @Override
 public Member save(Member member) {
@@ -91,9 +98,9 @@ public Member save(Member member) {
 }
 ```
 ```java
-    @Transactional
-    public Member save(Member member) {
-    }
+@Transactional
+public Member save(Member member) {
+}
 ```
 
 ## DataSource 설정
@@ -263,6 +270,18 @@ JDBC는 Connection의 setAutoCommit(false)를 이용해서 트랜잭션을 시�
 스프링이 제공하는 @Transactional 애노테이션을 사용하면 트랜잭션 범위를 매우 쉽게 지정할 수 있다.
 
 ### @Transactional과 프록시
+
+여러 빈 객체에 공통으로 적용되는 기능을 구현하는 방법으로 AOP가 나왔는데, 트랜잭션도 공통 기능 중 하나이다. 스프링은 @Transactional 애노테이션을 이용해서 트랜잭션을 처리하기 위해 내부적으로 AOP를 사용한다
+
 ### @Transactional 적용 메서드의 롤백 처리
+
+@Transactional을 처리하기 위한 프록시 객체는 **원본 객체의 메서드를 실행하는 과정에서 RuntimeException이 발생하면 트랜잭션을 롤백**한다.
+
 ### @Transactional의 주요 속성
+@Transacional에도 속성 값을 줄 수 있다. 그러나 잘 사용하지는 않는다.
+
 ### 트랜잭션 전파
+
+@Transactional의 propagation 속성은 기본값이 Propagation.REQUIRED이다. REQUIRED는 현재 진행 중인 트랜잭션이 존재하면 해당 트랜잭션을 사용하고 존재하지 않으면 새로운 트랜잭션을 생성한다.
+
+만약 Transaction 범위의 메서드를 처음 호출하면 새로운 트랜잭션을 시작하고, 그 메서드에서 다른 메서드를 호출하면 존재하는 트랜잭션을 그대로 사용한다.
