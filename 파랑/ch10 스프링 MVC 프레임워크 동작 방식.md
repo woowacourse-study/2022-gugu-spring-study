@@ -1,6 +1,6 @@
 # Chapter 10 스프링 MVC 프레임워크 동작 방식
 
-![Untitled](https://s3.us-west-2.amazonaws.com/secure.notion-static.com/942df9e7-98fd-438b-b2f3-602fb78794f7/Untitled.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=AKIAT73L2G45EIPT3X45%2F20220526%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20220526T175239Z&X-Amz-Expires=86400&X-Amz-Signature=eb343e5d252006b1e215c06d0ab3d038197f986da41109623f30bf33b330fefe&X-Amz-SignedHeaders=host&response-content-disposition=filename%20%3D%22Untitled.png%22&x-id=GetObject)
+![Untitled](images/ch10_1.png)
 
 ### 컨트롤러와 핸들러
 
