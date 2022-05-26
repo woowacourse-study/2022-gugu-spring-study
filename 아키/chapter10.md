@@ -2,7 +2,7 @@
 
 ## 스프링 MVC 핵심 구성 요소
 
-[](image/10장.jpeg)
+![](image/10장.jpeg)
 
 1. 웹 브라우저로부터 요청이 전송되면 `DispatcherServlet`이 요청을 받는다.
 2. `DispatcherServlet`은 `HandlerMapping`에 컨트롤러 검색을 요청한다.
