@@ -1,0 +1,268 @@
+# DB 연동
+
+## JDBC 프로그래밍의 단점을 보완하는 스프링 JdbcTemplate
+
+> **JDBC의 단점**  
+> 반복되는 코드가 많다. DB 연동에 필요한 Connection을 구한 다음 쿼리를 실행하기 위한 PreparedStatement, 결과를 가져오기 위한 ResultSet을 생성하고 닫아줘야 한다.
+
+Jdbc API를 이용한 DB 연동 코드
+
+```java
+@Override
+public Member save(Member member) {
+	String sql = "insert into member(name) values(?)";
+	Connection conn = null;
+	PreparedStatement pstmt = null;
+	ResultSet rs = null;
+	try {
+		conn = getConnection();
+		pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+		pstmt.setString(1, member.getName());
+		pstmt.executeUpdate();
+		rs = pstmt.getGeneratedKeys();
+		if (rs.next()) {
+			member.setId(rs.getLong(1));
+		} else {
+			throw new SQLException("id 조회 실패");
+		}
+		return member;
+	} catch (Exception e) {
+		throw new IllegalStateException(e);
+	} finally {
+		try {
+			if (rs != null) {
+				rs.close();
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		try {
+			if (pstmt != null) {
+				pstmt.close();
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		try {
+			if (conn != null) {
+				close(conn);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+}
+```
+
+스프링 JdbcTemplate의 장점
+1. 중복되는 코드를 줄어든다.
+```java
+@Override
+public Station save(Station station) {
+	final String sql = "INSERT INTO station (name) VALUES (?)";
+	final KeyHolder keyHolder = new GeneratedKeyHolder();
+	jdbcTemplate.update(connection -> {
+		PreparedStatement ps = connection.prepareStatement(sql, new String[]{"id"});
+		ps.setString(1, station.getName());
+		return ps;
+	}, keyHolder);
+
+	final Long newStationId = keyHolder.getKey().longValue();
+
+	return new Station(newStationId, station.getName());
+}
+```
+
+2. 트랜잭션 관리가 쉽다. JDBC API로 트랜잭션을 처리하면 다음과 같이 커밋과 롤백처리를 신경써야 하지만, 스프링을 사용하면 `@Transactional `애노테이션만 붙이면 커밋과 롤백처리를 대신 해준다.
+```java
+@Override
+public Member save(Member member) {
+	Connection conn = null;
+	PreparedStatement pstmt = null;
+	try {
+		conn = getConnection();
+		conn.setAutoCommit(false);
+		//DB 쿼리 실행
+	} catch (Exception e) {
+		throw new IllegalStateException(e);
+	} finally {
+		//생략
+	}
+}
+```
+```java
+    @Transactional
+    public Member save(Member member) {
+    }
+```
+
+## DataSource 설정
+JDBC API가 DB 연결을 구하는 방법에는 2가지가 있다.
+1. DriverManager를 이용
+2. DataSource를 이용
+
+> 궁금한점  
+> DriverManager를 이용하는 것과 DataSource를 이용하는 것의 차이점이 뭘까? 커넥션풀?
+```java
+//1번
+connection = DriverManager.getConnection("jdbc:mysql://localhost/order_mgmt", "root", "1234");
+
+//2번
+connection = dataSource.getConnection();
+```
+
+### DataSource 빈 등록 및 주입
+스프링에서는 DataSource를 사용해서 DB connection을 구한다. DB 연동에 사용할 DataSource를 빈으로 등록하고 주입받아 사용한다. AppCtx 설정을 통해 DataSource을 빈으로 등록할 수 있다.
+
+```java
+@Configuration
+public class AppCtx {
+
+    @Bean(destroyMethod = "close")
+    public DataSource dataSource() {
+        DataSource ds = new DataSource();
+        ds.setDriverClassName("com.mysql.jdbc.Driver");
+        ds.setUrl("jdbc:mysql://localhost/spring5fs?characterEncoding=utf8");
+        ds.setUsername("spring5");
+        ds.setPassword("spring5");
+        ds.setInitialSize(2);
+        ds.setMaxActive(10);
+        return ds;
+    }
+}
+```
+
+우리 프로젝트에선 AppCtx 대신 `application.yml` 설정을 통해 자동으로 DataSource를 빈을 생성할 수 있었다.
+
+```
+spring:
+  datasource: # datasource 설정
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password:
+```
+
+### DataSource 클래스
+DataSource 클래스는 커넥션 풀과 관련한 기능을 제공한다.  
+  
+커넥션 풀은 커넥션을 생성하고 유지한다. 커넥션 풀에 커넥션을 요청하면 해당 커넥션은 활성(active) 상태가 되고, 커넥션을 다시 커넥션 풀에 반환하면 유휴(idle) 상태가 된다.
+
+> 커넥션 풀을 사용하는 이유는 성능 때문이다. 매번 커넥션을 생성하면 그때마다 연결 시간이 소모되기 때문에, 미리 커넥션을 생성해두고 필요할때마다 커넥션을 꺼내 응답 시간을 줄인다. maxActive 메서드를 통해 DataSource의 최대 커넥션 개수를 지정할 수 있다.
+
+## JdbcTemplate을 이용한 쿼리 실행
+
+### 조회 쿼리
+JdbcTemplate 클래스는 SELECT 쿼리 실행을 위한 query() 메서드를 제공한다.  
+query() 메서드는 sql 파라미터로 전달받은 쿼리를 실행하고 RowMapper를 이용해 ResultSet의 결과를 자바 객체로 변환한다.
+
+```java
+public Member selectByEmail(String email) {
+	List<Member> results = jdbcTemplate
+		.query("select * from MEMBER where EMAIL = ?", new RowMapper<Member>(){
+			@Override
+			public Member mapRow(ResultSet rs, int rowNum) throws SQLException {
+				Member member = new Member(
+					rs.getString("EMAIL"),
+					rs.getString("PASSWORD"),
+					rs.getString("NAME"),
+					rs.getTimestamp("REGDATE").toLocalDateTime());
+				return member;
+			}
+		}, email);
+	return results.isEmpty() ? null : results.get(0);
+}
+```
+
+> queryForObject():  
+> 결과가 1행인 경우 사용할 수 있다.
+
+```java
+public int count() {
+	Integer count = jdbcTemplate.queryForObject("select count(*) from MEMBER", Integer.class);
+	return count;
+}
+```
+
+### 변경 쿼리
+
+```java
+public void update(Member member) {
+	jdbcTemplate.update("update MEMBER set NAME = ?, PASSWORD = ? where EMAIL = ?",
+		member.getName(), member.getPassword(), member.getEmail());
+}
+```
+
+### PreparedStatementCreator를 이용한 쿼리 실행
+
+PreparedStatement의 set 메서드를 이용해서 직접 인덱스 파라미터의 값을 설정할 때도 있다. 이 경우 PreapredStatementCreator를 인자로 받는 메서드를 이용해서 직접 preapredStatement를 생성하고 설정해야 한다.
+
+```java
+public void update(Member member) {
+	jdbcTemplate.update(new PreparedStatementCreator() {
+		@Override
+		public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
+			// 파라미터로 전달받은 Connection을 이용해서 preparedStatement 생성
+			PreparedStatement pstmt = con.prepareStatement(
+				"inser into MEMBER (EMAIL, PASSWORD, NAME, REGDATE) values (?, ?, ?, ?)");
+			pstmt.setString(1, member.getEmail());
+			pstmt.setString(2, member.getPassword());
+			pstmt.setString(3, member.getName());
+			pstmt.setTimestamp(4, Timestamp.valueOf(member.getRegisterDateTime()));
+			// 생성한 preparedStatement 객체 리턴
+			return pstmt;
+		}
+	});
+```
+
+### INSERT 쿼리 실행 시 KeyHolder를 이용해서 자동 생성 키값 구하기
+
+KeyHolder를 통해 자동으로 생성된 키 값을 구할 수 있다.
+
+```java
+public void insert(Member member) {
+	KeyHolder keyHolder = new GeneratedKeyHolder();
+	jdbcTemplate.update(new PreparedStatementCreator() {
+		@Override
+		public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
+			PreparedStatement pstmt = con.prepareStatement(
+				"insert into MEMBER (EMAIL, PASSWORD, NAME, REGDATE)" +
+					"values (?, ?, ?, ?)", new String[]{"ID"});
+			pstmt.setString(1, member.getEmail());
+			pstmt.setString(2, member.getPassword());
+			pstmt.setString(3, member.getName());
+			pstmt.setTimestamp(4, Timestamp.valueOf(member.getRegisterDateTime()));
+			return pstmt;
+		}
+	}, keyHolder);
+	Number keyValue = keyHolder.getKey();
+	member.setId(keyValue.longValue());
+}
+```
+
+## 스프링의 익셉션 변환 처리
+
+SQL 문법이 잘못됐을 때 발생한 메세지를 보면 익셉션 클래스가 org.spring.framework.jdbc 패키지에 속한 BadSqlGrammarException 클래스임을 알 수 있다.  
+
+JDBC API를 사용하는 과정에서 SQLException이 발생하면 이 익셉션을 알맞은 DataAccessException으로 변환해서 발생한다.  
+
+예를 들어 MySQL용 JDBC 드라이버는 SQL 문법이 잘못된 경우 SQLException을 상속받은 MySQLSyntaxErrorException을 발생시키는데 JdbcTemplate은 이 익셉션을 DataAccessException을 상속받은 BadSqlGrammarExcepation으로 변환한다.  
+
+> 스프링은 왜 SQLException을 그대로 전파하지 않고 SQLException을 DataAccessException으로 변환할까?  
+> 연동하는 DB에 상관없이 **동일하게 익셉션을 처리**할 수 있도록 하기 위함이다. 덕분에 개발자는 연결하는 DB마다 각각 예외를 다르게 처리할 수고로움이 사라졌다.
+
+## 트랜잭션 처리
+
+트랜잭션(transaction)이란 두 개 이상의 쿼리를 한 작업으로 실행해야 할 때 사용하는 것이다. 트랜잭션은 여러 쿼리를 논리적으로 하나의 작업으로 묶어준다. 한 트랜잭션으로 묶인 쿼리 중 하나라도 실패하면 전체 쿼리를 실패로 간주하고 실패 이전에 실행한 쿼리를 취소한다.  
+
+쿼리 실행 결과를 취소하고 DB를 기존 상태로 되돌리는 것을 `롤백(rollback)`이라고 부른다. 반면에 트랜잭션으로 묶인 모든 쿼리가 성공해서 쿼리 결과를 DB에 실제로 반영하는 것을 `커밋(commit)`이라고 한다.  
+
+JDBC는 Connection의 setAutoCommit(false)를 이용해서 트랜잭션을 시작하고 commit()과 rollback()을 이용해서 트랜잭션을 반영(커밋)하거나 취소(롤백)한다.
+
+### @Transactional을 이용한 트랜잭션 처리
+스프링이 제공하는 @Transactional 애노테이션을 사용하면 트랜잭션 범위를 매우 쉽게 지정할 수 있다.
+
+### @Transactional과 프록시
+### @Transactional 적용 메서드의 롤백 처리
+### @Transactional의 주요 속성
+### 트랜잭션 전파
