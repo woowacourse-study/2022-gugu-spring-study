@@ -75,7 +75,7 @@ public Station save(Station station) {
 
 2. 트랜잭션 관리가 쉽다.  
 
-PreparedStatement의 특성상, 자동으로 commit이 이루어 진다. 연결이 AutoCommit이면 해당 연결의 모든 SQL 문이 개별 트랜잭션으로 실행되고 커밋됩니다.
+PreparedStatement의 특성상, 자동으로 commit이 이루어 진다. 연결이 AutoCommit이면 해당 연결의 모든 SQL 문이 개별 트랜잭션으로 실행되고 커밋된다.
 
 한 메서드 안에서 두개 이상의 sql문을 실행하고자 할 때, 하나라도 제대로 수행되지 않으면 rollback을 하고싶은 경우 Connection의 setAutoCommit(false) 설정을 통해 AutoCommit을 방지할 수 있다.
 
