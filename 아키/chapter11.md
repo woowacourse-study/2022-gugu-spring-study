@@ -117,6 +117,9 @@ public class RegisterController {
 > 2. required(boolean): 필수 여부 지정
 > 3. defaultValue(String): 값이 없을 때 사용할 문자열 지정
 
+> 궁금한점 :  
+> @ModelAttribute 필요없는 경우
+
 ## 리다이렉트 처리
 
 ```java
@@ -166,6 +169,10 @@ public class RegisterRequest {
 	//생략
 }
 ```
+
+> 궁금한점 : 
+> @Request Body에서는 Setter가 필요없다?
+> https://jojoldu.tistory.com/407
 
 ## 컨트롤러 구현 없는 매핑
 
