@@ -264,10 +264,53 @@ JDBC API를 사용하는 과정에서 SQLException이 발생하면 이 익셉션
 
 쿼리 실행 결과를 취소하고 DB를 기존 상태로 되돌리는 것을 `롤백(rollback)`이라고 부른다. 반면에 트랜잭션으로 묶인 모든 쿼리가 성공해서 쿼리 결과를 DB에 실제로 반영하는 것을 `커밋(commit)`이라고 한다.  
 
-JDBC는 Connection의 setAutoCommit(false)를 이용해서 트랜잭션을 시작하고 commit()과 rollback()을 이용해서 트랜잭션을 반영(커밋)하거나 취소(롤백)한다.
+JDBC API는 커넥션이 생성되면 바로 Auto Commit 모드로 세팅된다. 그래서 sql문마다 바로바로 커밋이 된다. 그래서 Connection의 setAutoCommit(false)를 통해 Auto Commit을 취소하고
+쿼리문마다 커밋과 롤백을 직접 실행해야 한다.
+
+```java
+Connection conn = null;
+try{
+	...
+	conn.setAutoCommit(false); // 트랜잭션 범위 시작
+	... 쿼리실행
+	conn.commit(); // 트랜잭션 범위 종료: 커밋
+}
+catch(SQLException ex){
+	if(conn != null)
+		// 트랜잭션 범위 종료: 롤백
+		try{ conn.rollback(); } catch (SQLException e){}
+}
+finally{
+	if(conn!= null)
+		try{ conn.close(); } catch(SQLException e){}
+}
+```
 
 ### @Transactional을 이용한 트랜잭션 처리
-스프링이 제공하는 @Transactional 애노테이션을 사용하면 트랜잭션 범위를 매우 쉽게 지정할 수 있다.
+스프링이 제공하는 `@Transactional` 애노테이션을 사용하면 트랜잭션 범위를 매우 쉽게 지정할 수 있다. 트랜잭션을 실행하고 싶은 메서드에 `@Transactional` 애노테이션을 붙이기만 하면 된다.
+
+```java
+@Transactional
+public void changePassword(String email, String oldPwd, String newPwd) {
+	Member member = memberDao.selectByEmail(email);
+	if (member == null)
+		throw new MemberNotFoundException();
+
+	member.changePassword(oldPwd, newPwd);
+
+	memberDao.update(member);
+}
+```
+
+changePassword 메서드는 하나의 트랜잭션으로 묶이며, 메서드 내의 쿼리가 하나라도 실패하면 전부 롤백된다.
+
+`@Transactional` 애노테이션이 제대로 동작하려면 다음 두가지 설정을 스프링에 추가해야 한다.
+1. PlatformTransactionManager 빈설정
+2. @Transcational 애노테이션 활성화 설정( @EnableTransactionManagement)
+
+> 궁금한점 : 
+> 위 2가지 설정을 모두 한 적이 없는데 스프링부트에서는 자동으로 설정을 해주는 것일까?
+
 
 ### @Transactional과 프록시
 
@@ -282,6 +325,15 @@ JDBC는 Connection의 setAutoCommit(false)를 이용해서 트랜잭션을 시�
 
 ### 트랜잭션 전파
 
-@Transactional의 propagation 속성은 기본값이 Propagation.REQUIRED이다. REQUIRED는 현재 진행 중인 트랜잭션이 존재하면 해당 트랜잭션을 사용하고 존재하지 않으면 새로운 트랜잭션을 생성한다.
+@Transactional의 propagation 속성은 기본값이 Propagation.REQUIRED이다. REQUIRED는 현재 진행 중인 트랜잭션이 존재하면 해당 트랜잭션을 사용하고 존재하지 않으면 새로운 트랜잭션을 생성한다.  
 
-만약 Transaction 범위의 메서드를 처음 호출하면 새로운 트랜잭션을 시작하고, 그 메서드에서 다른 메서드를 호출하면 존재하는 트랜잭션을 그대로 사용한다.
+만약 propagation 속성값이 REQUIRES_NEW라면 기존 트랜잭션이 존재하는지와 상관없이 새로운 트랜잭션을 생성한다.  
+
+Transaction Propagation의 종류는 다음과 같다. 
+- REQUIRED (default) : 이미 시작된 트랜잭션이 있으면 참여하고 없으면 새로 시작한다. 
+- REQUIRES_NEW : 항상 새로운 트랜잭션을 시작한다. 이미 진행 중인 트랜잭션이 있으면 트랜잭션을 잠시 보류시킨다.
+- SUPPORTS : 이미 시작된 트랜잭션이 있으면 참여하고, 없으면 트랜잭션없이 진행한다.
+- NESTED : 중첩된 트랜잭션은 먼저 시작된 부모 트랜잭션의 커밋과 롤백에는 영향을 받지만 자신의 커밋과 롤백은 부모 트랜잭션에게 영향을 주지 않는다. 메인 트랜잭션이 롤백되면 중첩된 로그 트랜잭션도 같이 롤백되지만, 반대로 중첩된 로그 트랜잭션이 롤백돼도 메인 작업에 이상이 없다면 메인 트랜잭션은 정상적으로 커밋된다.
+- MANDATORY : REQUIRED와 비슷하게 이미 시작된 트랜잭션이 있으면 참여한다. 반면에 트랜잭션이 시작된 것이 없으면 새로 시작하는 대신 예외를 발생시킨다. 혼자서는 독립적으로 트랜잭션을 진행하면 안 되는 경우에 사용한다.
+- NOT_SUPPORTED : 트랜잭션을 사용하지 않게 한다. 이미 진행 중인 트랜잭션이 있으면 보류시킨다.
+- NEVER : 트랜잭션을 사용하지 않도록 강제한다. 이미 진행 중인 트랜잭션도 존재하면 안된다 있다면 예외를 발생시킨다.
