@@ -61,7 +61,7 @@ public class ExeTimeCalculator implements Calculator {
 
 ## 프록시 생성 방식
 
-![Untitled](https://s3.us-west-2.amazonaws.com/secure.notion-static.com/bc64a693-0904-4f01-ae51-7fd5fb175184/Untitled.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=AKIAT73L2G45EIPT3X45%2F20220520%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20220520T074126Z&X-Amz-Expires=86400&X-Amz-Signature=9328d7427c2fa266c1a34734d252f6a4b130b44a7cb0e734a2441e317c6b3296&X-Amz-SignedHeaders=host&response-content-disposition=filename%20%3D%22Untitled.png%22&x-id=GetObject)
+![Untitled](images/ch07_1.png)
 
 스프링은 AOP를 위한 프록시 객체를 생성할 때 실제 생성할 빈 객체가 인터페이스를 상속하면 인터페이스를 이용해서 프록시를 생성한다.
 
