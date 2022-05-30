@@ -15,8 +15,10 @@
 
 - 실행 결과가 1행인 경우 사용
 - 실행 결과 칼럼이 2개 이상이면 RowMapper를 사용하여 자바 객체로 변환할 수 있다
-- 쿼리를 실행한 결과 행이 없거나 두 개 이상이면 `IncorrectResultSizeDataAccessException` 이 발생한다
-- 쿼리를 실행한 결과 행의 개수가 0이면 하위 클래스인 `EmptyResultDataAccessException` 이 발생한다. → `행의 개수가 0인 거랑 행이 없는 거랑 뭐가 달라?`
+- 쿼리를 실행한 결과 행의 개수가 0이거나 두 개 이상이면 `IncorrectResultSizeDataAccessException` 이 발생한다
+- 쿼리를 실행한 결과 행의 개수가 0이면 하위 클래스인 `EmptyResultDataAccessException` 이 발생한다.
+
+> `EmptyResultDataAccessException` 이 `IncorrectResultSizeDataAccessException` 을 상속하므로 행의 개수가 0인 경우 `EmptyResultDataAccessException` 가 발생한다.
 
 ### update
 
@@ -27,7 +29,7 @@
 
 - set 메서드를 사용해서 직접 인덱스 파라미터의 값을 설정해야할 때 사용한다
 
-  → `그럴 때가 언제임?`
+> 일반적으로는 값을 바로 넣어주지만, 대표적으로 keyHolder를 만들 때 creator를 써야 한다. 
 
 
 ```java
