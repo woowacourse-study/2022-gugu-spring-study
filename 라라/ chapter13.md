@@ -1,5 +1,6 @@
 # 13. 세션, 인터셉터, 쿠키
 
+# 세션
 ### 컨트롤러에서 HttpSession 사용하기
 
 **첫 번째 방법**
@@ -177,8 +178,7 @@ public class LoginInterceptor implements HandlerInterceptor {
 - `addPathPatterns` 로 url 특정 패턴 등록
 - `excludePathPatterns` 로 url 특정 패턴 제외
 
-
-## 쿠키
+# 쿠키
 
 쿠키를 사용해서 이메일 기억하기
 
