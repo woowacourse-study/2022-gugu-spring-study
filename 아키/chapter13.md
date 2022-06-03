@@ -21,10 +21,8 @@ public String form(LoginCommand loginCommand, Errors errors, HttpSession session
 
 ```java
   @PostMapping
-  public String submit(
-      LoginCommand loginCommand, Errors errors, HttpServletRequest req){
+  public String submit(LoginCommand loginCommand, Errors errors, HttpServletRequest req){
     HttpSession session = req.getSession();
-      ... // session을 사용하는 코드
   }
 ```
 첫 번째 방법은 항상 HttpSession을 생성하지만, 두 번째 방법은 필요한 시점에만 HttpSession을 생성한다.
@@ -40,9 +38,7 @@ public String form(LoginCommand loginCommand, Errors errors, HttpSession session
 public class LoginController {
     ...
     @PostMapping
-    public String submit(
-            LoginCommand loginCommand, Errors errors, HttpSession session,
-            HttpServletResponse response) {
+    public String submit(LoginCommand loginCommand, Errors errors, HttpSession session,HttpServletResponse response) {
         new LoginCommandValidator().validate(loginCommand, errors);
         if (errors.hasErrors()) {
             return "login/loginForm";
