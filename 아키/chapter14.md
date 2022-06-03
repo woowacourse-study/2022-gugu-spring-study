@@ -27,6 +27,12 @@ public class MemberDetailController {
 }
 ```
 
+> 궁금한점 :  
+Type 1 => http://localhost:8080/users?id=1  
+Type 2 => http://localhost:8080/users/1
+  
+![](image/14장_리뷰어피드백.png)
+
 # 컨트롤러 익셉션 처리
 
 컨트롤러에서 발생한 익셉션을 직접 처리하기 위해 @ExceptionHandler 어노테이션을 사용한다.  
