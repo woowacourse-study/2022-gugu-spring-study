@@ -151,7 +151,6 @@ Ant 패턴은 *, **, ?의 세 가지 특수 문자를 사용해 경로를 다음
 @Controller
 @RequestMapping("/login")
 public class LoginController {
-    ...
     @GetMapping
     public String form(LoginCommand loginCommand,
             /*
@@ -167,7 +166,7 @@ public class LoginController {
         return "login/loginForm";
     }
 
-/*
+    /*
     * 실제 쿠키를 생성하는 부분은 로그인을 처리하는 다음 매서드
     * 쿠키를 사용하기 위해 HttpServletResponse 객체가 필요하므로 파라미터로 전달
     */
