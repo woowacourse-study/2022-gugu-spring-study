@@ -1,4 +1,3 @@
-# 좀 치는 스프링 스터디
 
 ## 책
 <image src="./image/book.jpg" width="300" />
