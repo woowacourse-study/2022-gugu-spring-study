@@ -90,3 +90,9 @@ public void test(RegisterRequest request, Errors errors) {
 - 어노테이션 종류
 
   [@Valid 정리해보기](https://velog.io/@gudnr1451/Valid-%EC%A0%95%EB%A6%AC%ED%95%B4%EB%B3%B4%EA%B8%B0)
+
+---
+
+> DTO 검증과 도메인 검증의 중복
+도메인의 검증 로직은 필수적이다. DTO 검증은 선택이다. 가장 기초적인(null, blank) 검증만 넣거나 or 도메인과 중복으로 검증하거나.
+>

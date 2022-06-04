@@ -103,6 +103,13 @@ public void addInterceptors(InterceptorRegistry registry) {
 - addInterceptor: 인터셉터 설정
 - addPathPatterns: 인터셉터를 적용할 경로 패턴을 지정
 
+### Filter VS Interceptor VS AOP
+
+[Filter VS Interceptor VS AOP](https://goddaehee.tistory.com/154)
+
+> 'DispactcherServlet를 기준으로 Spring과 관련된 작업이 아니라면(= Web에 대한 전반적인 작업) Filter에서 구현하는게 적합하다고 생각'에서 Spring 작업과 Web에 대한 전반적인 작업이 무슨 의미인지
+> spring이 아닌 web 연결이나 통신과 관련된 것들은 Interceptor가 아니라 Filter로 구현한다
+
 ## Cookie
 
 ### @CookieValue
